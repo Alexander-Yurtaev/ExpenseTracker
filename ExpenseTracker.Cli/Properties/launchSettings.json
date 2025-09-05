@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ExpenseTracker.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "add --description \"Lunch\" --amount 20"
+    }
+  }
+}
