@@ -47,4 +47,10 @@ public class ExpenseRepository
         var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson) ?? [];
         return expenses;
     }
+
+    public async Task<int> GetSummaryAsync()
+    {
+        var list = await LoadAsync();
+        return list.Sum(l => l.Amount);
+    }
 }

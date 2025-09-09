@@ -1,7 +1,8 @@
-﻿using System.Text.Json;
-using ExpenseTracker.Cli;
+﻿using ExpenseTracker.Cli;
 using ExpenseTracker.Cli.Models;
 using FluentAssertions;
+using System;
+using System.Text.Json;
 
 namespace ExpenseTracker.Tests
 {
@@ -81,6 +82,30 @@ namespace ExpenseTracker.Tests
             expenses.Should().NotBeNullOrEmpty();
             expenses.Count.Should().Be(2);
             expenses.Select(e => e.Id).Distinct().Count().Should().Be(2);
+        }
+
+        [Fact]
+        public async Task SummaryCommandsTest()
+        {
+            // Arrange
+            await RecreateFileDb();
+            var manager = new ExpenseManager();
+            var argsSet = new string[2][];
+
+            argsSet[0] = ["add", "--description", "Milk", "--amount", "28"];
+            argsSet[1] = ["add", "--description", "Sugar", "--amount", "30"];
+
+            foreach (string[] args in argsSet)
+            {
+                await manager.Execute(args);
+            }
+
+            // Act
+            var repository = new ExpenseRepository();
+            var summary = await repository.GetSummaryAsync();
+
+            // Assert
+            summary.Should().Be(58);
         }
 
         private async Task RecreateFileDb()

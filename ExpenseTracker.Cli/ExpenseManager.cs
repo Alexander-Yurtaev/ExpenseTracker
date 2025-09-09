@@ -54,7 +54,7 @@ public class ExpenseManager
         expenses.Add(expense);
         await repository.SaveAsync(expenses);
 
-        return new ResultMessage(true, expense.Id.ToString());
+        return new ResultMessage(true, $"Expense added successfully (ID: {expense.Id})");
     }
 
     private async Task<ResultMessage> ListCommand(Dictionary<string, string> commandParameters)
@@ -75,7 +75,11 @@ public class ExpenseManager
 
     private async Task<ResultMessage> SummaryCommand(Dictionary<string, string> commandParameters)
     {
-        return await Task.FromResult(new ResultMessage(true, "Summary"));
+        var repository = new ExpenseRepository();
+        await repository.CreateIfNotExists();
+        var summary = await repository.GetSummaryAsync();
+
+        return await Task.FromResult(new ResultMessage(true, $"Total expenses: {summary:C}"));
     }
 
     public bool GetCommandAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
