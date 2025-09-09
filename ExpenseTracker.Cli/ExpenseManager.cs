@@ -1,55 +1,73 @@
-﻿namespace ExpenseTracker.Cli;
+﻿using ExpenseTracker.Cli.Models;
+
+namespace ExpenseTracker.Cli;
 
 public class ExpenseManager
 {
-    public void Execute(string[] args)
+    public async Task<ResultMessage> Execute(string[] args)
     {
         if (!GetCommandAndParameters(args, out var command, out var parameters))
         {
-            Console.WriteLine("Wrong value(s) in the args.");
-            return;
+            return new ResultMessage(false, "Wrong value(s) in the args.");
         }
 
         switch (command)
         {
             case "add":
-                AddCommand(parameters);
-                break;
+                return await AddCommand(parameters);
             case "delete":
-                DeleteCommand(parameters);
-                break;
+                return await DeleteCommand(parameters);
             case "list":
-                ListCommand(parameters);
-                break;
+                return await ListCommand(parameters);
             case "summary":
-                SummaryCommand(parameters);
-                break;
+                return await SummaryCommand(parameters);
             default:
-                Console.WriteLine($"Unknown command - *{command}");
-                break;
+                return new ResultMessage(false, $"Unknown command - *{command}");
         }
     }
 
-    private static void AddCommand(Dictionary<string, string> commandParameters)
+    /// <summary>
+    /// $ expense-tracker add --description "Lunch" --amount 20
+    /// </summary>
+    /// <param name="commandParameters"></param>
+    private static async Task<ResultMessage> AddCommand(Dictionary<string, string> commandParameters)
     {
-        Console.WriteLine("Add");
+        if (!commandParameters.TryGetValue("--description", out var description))
+        {
+            return new ResultMessage(false, $"Parameter '--description' was not found.");
+        }
+
+        if (!commandParameters.TryGetValue("--amount", out var amountString))
+        {
+            return new ResultMessage(false, $"Parameter '--amount' was not found.");
+        }
+
+        if (!Int32.TryParse(amountString, out var amount))
+        {
+            return new ResultMessage(false, $"'--amount' parameter must be int.");
+        }
+
+        var repository = new ExpenseRepository();
+        var id = await repository.GetNextIdAsync();
+        var expense = new Expense(id, description, amount);
+        return new ResultMessage(true);
     }
 
-    private static void DeleteCommand(Dictionary<string, string> commandParameters)
+    private static async Task<ResultMessage> DeleteCommand(Dictionary<string, string> commandParameters)
     {
-        Console.WriteLine("Delete");
+        return new ResultMessage(true, "Delete");
     }
 
-    private static void ListCommand(Dictionary<string, string> commandParameters)
+    private static async Task<ResultMessage> ListCommand(Dictionary<string, string> commandParameters)
     {
-        Console.WriteLine("List");
+        return new ResultMessage(true, "List");
     }
-    private static void SummaryCommand(Dictionary<string, string> commandParameters)
+    private static async Task<ResultMessage> SummaryCommand(Dictionary<string, string> commandParameters)
     {
-        Console.WriteLine("Summary");
+        return new ResultMessage(true, "Summary");
     }
 
-    private static bool GetCommandAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
+    public static bool GetCommandAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
     {
         commandParameters = new Dictionary<string, string>();
 
