@@ -14,9 +14,10 @@ namespace ExpenseTracker.Tests
         {
             // Arrange
             await RecreateFileDb();
+            var manager = new ExpenseManager();
 
             // Act
-            ExpenseManager.GetCommandAndParameters(args, out string command, out var parameters);
+            manager.GetCommandAndParameters(args, out string command, out var parameters);
 
             // Assert
             command.Should().BeEquivalentTo(args[0]);
