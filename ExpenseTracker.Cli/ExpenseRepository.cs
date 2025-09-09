@@ -47,7 +47,7 @@ public class ExpenseRepository
         }
     }
 
-    private async Task<List<Expense>> LoadAsync()
+    public async Task<List<Expense>> LoadAsync()
     {
         var expensesJson = await File.ReadAllTextAsync(FilePath);
         var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson) ?? [];
