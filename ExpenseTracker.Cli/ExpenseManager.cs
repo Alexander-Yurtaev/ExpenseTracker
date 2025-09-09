@@ -6,7 +6,7 @@ public class ExpenseManager
 {
     public async Task<ResultMessage> Execute(string[] args)
     {
-        if (!GetCommandAndParameters(args, out var command, out var parameters))
+        if (!GetCommandsAndParameters(args, out var command, out var parameters))
         {
             return new ResultMessage(false, "Wrong value(s) in the args.");
         }
@@ -40,9 +40,10 @@ public class ExpenseManager
 
         var repository = new ExpenseRepository();
         await repository.CreateIfNotExists();
+
         var expenses = await repository.LoadAsync();
 
-        var id = (expenses.Count > 0 ? expenses.Max(e => e.Id) : 0) + 1;
+        var id = expenses.Any() ? expenses.Max(e => e.Id) + 1 : 1;
         var expense = new Expense(id, description, amount)
         {
             Date = DateTime.Now
@@ -59,7 +60,7 @@ public class ExpenseManager
         await repository.CreateIfNotExists();
         var list = await repository.GetAllExpensesAsync();
 
-        PrintExpensesTable(list);
+        await Task.Run(() => PrintExpensesTable(list));
 
         return await Task.FromResult(new ResultMessage(true, "List"));
     }
@@ -78,9 +79,11 @@ public class ExpenseManager
 
         var repository = new ExpenseRepository();
         await repository.CreateIfNotExists();
+        
         var expenses = await repository.LoadAsync();
 
-        var expense = expenses.FirstOrDefault(e => e.Id == id);
+        var expense = await Task.Run(() => expenses.FirstOrDefault(e => e.Id == id));
+
         if (expense is not null)
         {
             expenses.Remove(expense);
@@ -94,12 +97,15 @@ public class ExpenseManager
     {
         var repository = new ExpenseRepository();
         await repository.CreateIfNotExists();
+
         var summary = await repository.GetSummaryAsync();
 
-        return await Task.FromResult(new ResultMessage(true, $"Total expenses: {summary:C}"));
+        var formattedSummary = await Task.Run(() => $"Total expenses: {summary:C}");
+
+        return new ResultMessage(true, formattedSummary);
     }
 
-    public bool GetCommandAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
+    public bool GetCommandsAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
     {
         commandParameters = new Dictionary<string, string>();
 

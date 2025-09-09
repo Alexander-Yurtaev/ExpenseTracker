@@ -17,7 +17,7 @@ namespace ExpenseTracker.Tests
             var manager = new ExpenseManager();
 
             // Act
-            manager.GetCommandAndParameters(args, out string command, out var parameters);
+            manager.GetCommandsAndParameters(args, out string command, out var parameters);
 
             // Assert
             command.Should().BeEquivalentTo(args[0]);
