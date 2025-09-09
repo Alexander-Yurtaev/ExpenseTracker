@@ -42,16 +42,35 @@ public class ExpenseManager
         await repository.CreateIfNotExists();
 
         var expenses = await repository.LoadAsync();
+        var existingExpense = expenses.FirstOrDefault(e => e.Description == description);
 
-        var id = expenses.Any() ? expenses.Max(e => e.Id) + 1 : 1;
-        var expense = new Expense(id, description, amount)
+        if (existingExpense is not null)
         {
-            Date = DateTime.Now
-        };
-        expenses.Add(expense);
-        await repository.SaveAsync(expenses);
+            expenses.Remove(existingExpense);
 
-        return new ResultMessage(true, $"Expense added successfully (ID: {expense.Id})");
+            existingExpense = existingExpense with
+            {
+                Amount = amount
+            };
+
+            expenses.Add(existingExpense);
+
+            await repository.SaveAsync(expenses);
+
+            return new ResultMessage(true, $"Expense updated successfully (ID: {existingExpense.Id})");
+        }
+        else
+        {
+            var id = expenses.Any() ? expenses.Max(e => e.Id) + 1 : 1;
+            var expense = new Expense(id, description, amount)
+            {
+                Date = DateTime.Now
+            };
+            expenses.Add(expense);
+            await repository.SaveAsync(expenses);
+
+            return new ResultMessage(true, $"Expense added successfully (ID: {expense.Id})");
+        }
     }
 
     private async Task<ResultMessage> ListCommand(Dictionary<string, string> commandParameters)

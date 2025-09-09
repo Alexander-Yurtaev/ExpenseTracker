@@ -75,6 +75,30 @@ namespace ExpenseTracker.Tests
         }
 
         [Fact]
+        public async Task UpdateExistingExpenseTest()
+        {
+            // Arrange
+            await RecreateFileDb();
+            var manager = new ExpenseManager();
+            var args = new[] { "add", "--description", "Milk", "--amount", "28" };
+            await manager.Execute(args);
+
+            // Act
+            args = new[] { "add", "--description", "Milk", "--amount", "38" };
+            ResultMessage result = await manager.Execute(args);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeTrue(result.Message);
+
+            var expenses = await GetAllExpenses();
+
+            expenses.Should().NotBeNullOrEmpty();
+            expenses.Count.Should().Be(1);
+            expenses.First().Amount.Should().Be(38);
+        }
+
+        [Fact]
         public async Task SummaryCommandTest()
         {
             // Arrange
