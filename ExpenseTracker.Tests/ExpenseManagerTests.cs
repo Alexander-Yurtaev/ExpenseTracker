@@ -119,6 +119,40 @@ namespace ExpenseTracker.Tests
             summary.Should().Be(138);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        [InlineData(5)]
+        [InlineData(6)]
+        [InlineData(7)]
+        [InlineData(8)]
+        [InlineData(9)]
+        [InlineData(10)]
+        [InlineData(11)]
+        [InlineData(12)]
+        public async Task SummaryCommandWithMonthTest(int monthValue)
+        {
+            // Arrange
+            await RecreateFileDb();
+            var manager = new ExpenseManager();
+            var argsList = GetMultipleArgs();
+
+            foreach (string[] args in argsList)
+            {
+                await manager.Execute(args);
+            }
+
+            // Act
+            var repository = new ExpenseRepository();
+            var monthCurrent = DateTime.Now.Month;
+            var summary = await repository.GetSummaryAsync(monthValue);
+
+            // Assert
+            summary.Should().Be(monthValue == monthCurrent ? 138 : 0);
+        }
+
         [Fact]
         public async Task DeleteCommandTest()
         {

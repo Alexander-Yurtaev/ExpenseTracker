@@ -44,9 +44,16 @@ public class ExpenseRepository
         }
     }
 
-    public async Task<int> GetSummaryAsync()
+    public async Task<int> GetSummaryAsync(int? month=null)
     {
         var list = await LoadAsync();
+
+        if (month.HasValue)
+        {
+            var year = DateTime.Now.Year;
+            list = list.Where(l => l.Date.Month == month.Value && l.Date.Year == year).ToList();
+        }
+
         return list.Sum(l => l.Amount);
     }
 }

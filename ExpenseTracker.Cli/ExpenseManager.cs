@@ -114,10 +114,20 @@ public class ExpenseManager
 
     private async Task<ResultMessage> SummaryCommand(Dictionary<string, string> commandParameters)
     {
+        int? month = null;
+        if (commandParameters.TryGetValue("--month", out var monthString))
+        {
+            if (!int.TryParse(monthString, out int monthValue))
+            {
+                return new ResultMessage(false, "--month parameter must be int value.");
+            }
+            month = monthValue;
+        }
+
         var repository = new ExpenseRepository();
         await repository.CreateIfNotExists();
 
-        var summary = await repository.GetSummaryAsync();
+        var summary = await repository.GetSummaryAsync(month);
 
         var formattedSummary = await Task.Run(() => $"Total expenses: {summary:C}");
 
