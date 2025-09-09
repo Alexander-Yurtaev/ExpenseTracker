@@ -1,7 +1,6 @@
 ﻿using ExpenseTracker.Cli;
 using ExpenseTracker.Cli.Models;
 using FluentAssertions;
-using System;
 using System.Text.Json;
 
 namespace ExpenseTracker.Tests
@@ -45,57 +44,45 @@ namespace ExpenseTracker.Tests
             // Assert
             result.Should().NotBeNull();
             result.IsSuccess.Should().BeTrue(result.Message);
-            var idString = result.Message;
-            if (!int.TryParse(idString, out var id))
-            {
-                Assert.Fail("Id must be int.");
-            }
 
-            id.Should().Be(1);
+            var expenses = await GetAllExpenses();
+
+            expenses.Should().NotBeNullOrEmpty();
+            expenses.Count.Should().Be(1);
+            expenses.First().Id.Should().Be(1);
         }
 
         [Fact]
-        public async Task AddMultipleCommandsTest()
+        public async Task AddMultipleCommandTest()
         {
             // Arrange
             await RecreateFileDb();
             var manager = new ExpenseManager();
-            var argsSet = new string[2][];
-
-            argsSet[0] = ["add", "--description", "Milk", "--amount", "28"];
-            argsSet[1] = ["add", "--description", "Sugar", "--amount", "30"];
-
-            var resultSet = new ResultMessage[2];
+            var argsList = GetMultipleArgs();
 
             // Act
-            var index = 0;
-            foreach (string[] args in argsSet)
+            foreach (string[] args in argsList)
             {
-                resultSet[index] = await manager.Execute(args);
-                index++;
+                await manager.Execute(args);
             }
 
             // Assert
-            var expensesJson = await File.ReadAllTextAsync(ExpenseRepository.FilePath);
-            var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson);
+            var expenses = await GetAllExpenses();
 
             expenses.Should().NotBeNullOrEmpty();
-            expenses.Count.Should().Be(2);
-            expenses.Select(e => e.Id).Distinct().Count().Should().Be(2);
+            expenses.Count.Should().Be(argsList.Count);
+            expenses.Select(e => e.Id).Distinct().Count().Should().Be(argsList.Count);
         }
 
         [Fact]
-        public async Task SummaryCommandsTest()
+        public async Task SummaryCommandTest()
         {
             // Arrange
             await RecreateFileDb();
             var manager = new ExpenseManager();
-            var argsSet = new string[2][];
+            var argsList = GetMultipleArgs();
 
-            argsSet[0] = ["add", "--description", "Milk", "--amount", "28"];
-            argsSet[1] = ["add", "--description", "Sugar", "--amount", "30"];
-
-            foreach (string[] args in argsSet)
+            foreach (string[] args in argsList)
             {
                 await manager.Execute(args);
             }
@@ -105,8 +92,35 @@ namespace ExpenseTracker.Tests
             var summary = await repository.GetSummaryAsync();
 
             // Assert
-            summary.Should().Be(58);
+            summary.Should().Be(138);
         }
+
+        [Fact]
+        public async Task DeleteCommandTest()
+        {
+            // Arrange
+            await RecreateFileDb();
+            var manager = new ExpenseManager();
+            var argsList = GetMultipleArgs();
+
+            foreach (string[] args in argsList)
+            {
+                await manager.Execute(args);
+            }
+
+            // Act
+            await manager.Execute(["delete", "--id", "2"]);
+
+            // Assert
+            var expenses = await GetAllExpenses();
+
+            expenses.Should().NotBeNullOrEmpty();
+            expenses.Count.Should().Be(2);
+            expenses[0].Id.Should().Be(1);
+            expenses[1].Id.Should().Be(3);
+        }
+
+        #region Private Methods
 
         private async Task RecreateFileDb()
         {
@@ -114,5 +128,24 @@ namespace ExpenseTracker.Tests
             var expensesJson = JsonSerializer.Serialize(emptyList);
             await File.WriteAllTextAsync(ExpenseRepository.FilePath, expensesJson);
         }
+
+        private async Task<List<Expense>?> GetAllExpenses()
+        {
+            var expensesJson = await File.ReadAllTextAsync(ExpenseRepository.FilePath);
+            var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson);
+            return expenses;
+        }
+
+        private List<string[]> GetMultipleArgs()
+        {
+            var result = new List<string[]>();
+            result.Add(["add", "--description", "Milk", "--amount", "28"]);
+            result.Add(["add", "--description", "Sugar", "--amount", "30"]);
+            result.Add(["add", "--description", "Water", "--amount", "80"]);
+
+            return result;
+        }
+
+        #endregion
     }
 }

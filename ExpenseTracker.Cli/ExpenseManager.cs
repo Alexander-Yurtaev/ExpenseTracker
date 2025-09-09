@@ -21,10 +21,6 @@ public class ExpenseManager
         };
     }
 
-    /// <summary>
-    /// $ expense-tracker add --description "Lunch" --amount 20
-    /// </summary>
-    /// <param name="commandParameters"></param>
     private async Task<ResultMessage> AddCommand(Dictionary<string, string> commandParameters)
     {
         if (!commandParameters.TryGetValue("--description", out var description))
@@ -70,7 +66,28 @@ public class ExpenseManager
 
     private async Task<ResultMessage> DeleteCommand(Dictionary<string, string> commandParameters)
     {
-        return await Task.FromResult(new ResultMessage(true, "Delete"));
+        if (!commandParameters.TryGetValue("--id", out var idString))
+        {
+            return new ResultMessage(false, $"Parameter '--id' was not found.");
+        }
+
+        if (!Int32.TryParse(idString, out var id))
+        {
+            return new ResultMessage(false, $"'--id' parameter must be int.");
+        }
+
+        var repository = new ExpenseRepository();
+        await repository.CreateIfNotExists();
+        var expenses = await repository.LoadAsync();
+
+        var expense = expenses.FirstOrDefault(e => e.Id == id);
+        if (expense is not null)
+        {
+            expenses.Remove(expense);
+            await repository.SaveAsync(expenses);
+        }
+
+        return new ResultMessage(true, $"Expense deleted successfully (ID: {id})");
     }
 
     private async Task<ResultMessage> SummaryCommand(Dictionary<string, string> commandParameters)
