@@ -50,7 +50,9 @@ public class ExpenseManager
         var repository = new ExpenseRepository();
         var id = await repository.GetNextIdAsync();
         var expense = new Expense(id, description, amount);
-        return new ResultMessage(true);
+        await repository.SaveAsync([expense]);
+
+        return new ResultMessage(true, expense.Id.ToString());
     }
 
     private static async Task<ResultMessage> DeleteCommand(Dictionary<string, string> commandParameters)

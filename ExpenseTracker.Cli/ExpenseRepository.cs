@@ -5,7 +5,7 @@ namespace ExpenseTracker.Cli;
 
 public class ExpenseRepository
 {
-    private const string FilePath = "ExpenseDb.json";
+    public const string FilePath = "ExpenseDb.json";
 
     public async Task CreateIfNotExists()
     {

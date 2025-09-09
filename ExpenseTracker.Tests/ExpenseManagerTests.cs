@@ -1,4 +1,5 @@
-﻿using ExpenseTracker.Cli;
+﻿using System.Text.Json;
+using ExpenseTracker.Cli;
 using ExpenseTracker.Cli.Models;
 using FluentAssertions;
 
@@ -9,9 +10,10 @@ namespace ExpenseTracker.Tests
         [Theory]
         [InlineData(2, "add", "--description", "Lunch", "--amount", "20")]
         [InlineData(2, "add", "--description", "Lunch", "--amount", "10")]
-        public void GetCommandAndParametersTest(int paramsCount, params string[] args)
+        public async Task GetCommandAndParametersTest(int paramsCount, params string[] args)
         {
             // Arrange
+            await RecreateFileDb();
 
             // Act
             ExpenseManager.GetCommandAndParameters(args, out string command, out var parameters);
@@ -31,6 +33,7 @@ namespace ExpenseTracker.Tests
         public async Task AddCommandTest()
         {
             // Arrange
+            await RecreateFileDb();
             var manager = new ExpenseManager();
             var args = new string[] { "add", "--description", "Milk", "--amount", "28" };
 
@@ -40,6 +43,20 @@ namespace ExpenseTracker.Tests
             // Assert
             result.Should().NotBeNull();
             result.IsSuccess.Should().BeTrue(result.Message);
+            var idString = result.Message;
+            if (!int.TryParse(idString, out var id))
+            {
+                Assert.Fail("Id must be int.");
+            }
+
+            id.Should().Be(1);
+        }
+
+        private async Task RecreateFileDb()
+        {
+            var emptyList = new List<Expense>();
+            var expensesJson = JsonSerializer.Serialize(emptyList);
+            await File.WriteAllTextAsync(ExpenseRepository.FilePath, expensesJson);
         }
     }
 }
