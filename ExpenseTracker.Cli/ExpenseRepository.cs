@@ -7,17 +7,6 @@ public class ExpenseRepository
 {
     public const string FilePath = "ExpenseDb.json";
 
-    //public async Task<int> GetNextIdAsync()
-    //{
-    //    var expenses = await LoadAsync();
-    //    if (expenses.Count == 0)
-    //    {
-    //        return 1;
-    //    }
-
-    //    return expenses.Max(e => e.Id) + 1; 
-    //}
-
     public async Task<List<Expense>> GetAllExpensesAsync()
     {
         var expenses = await LoadAsync();
@@ -43,9 +32,16 @@ public class ExpenseRepository
 
     public async Task<List<Expense>> LoadAsync()
     {
-        var expensesJson = await File.ReadAllTextAsync(FilePath);
-        var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson) ?? [];
-        return expenses;
+        try
+        {
+            var expensesJson = await File.ReadAllTextAsync(FilePath);
+            var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson) ?? [];
+            return expenses;
+        }
+        catch (JsonException e)
+        {
+            throw new Exception("Error! Loading data", e);
+        }
     }
 
     public async Task<int> GetSummaryAsync()
