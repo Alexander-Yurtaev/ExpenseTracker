@@ -7,36 +7,30 @@ public class ExpenseRepository
 {
     public const string FilePath = "ExpenseDb.json";
 
-    public async Task<int> GetNextIdAsync()
-    {
-        await CreateIfNotExists();
+    //public async Task<int> GetNextIdAsync()
+    //{
+    //    var expenses = await LoadAsync();
+    //    if (expenses.Count == 0)
+    //    {
+    //        return 1;
+    //    }
 
-        var expenses = await LoadAsync();
-        if (expenses.Count == 0)
-        {
-            return 1;
-        }
-
-        return expenses.Max(e => e.Id) + 1; 
-    }
+    //    return expenses.Max(e => e.Id) + 1; 
+    //}
 
     public async Task<List<Expense>> GetAllExpensesAsync()
     {
-        await CreateIfNotExists();
-
         var expenses = await LoadAsync();
         return expenses;
     }
 
     public async Task SaveAsync(List<Expense> expenses)
     {
-        await CreateIfNotExists();
-
         var expensesJson = JsonSerializer.Serialize(expenses);
         await File.WriteAllTextAsync(FilePath, expensesJson);
     }
 
-    private async Task CreateIfNotExists()
+    public async Task CreateIfNotExists()
     {
         if (!File.Exists(FilePath))
         {

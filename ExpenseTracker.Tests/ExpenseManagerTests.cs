@@ -80,6 +80,7 @@ namespace ExpenseTracker.Tests
 
             expenses.Should().NotBeNullOrEmpty();
             expenses.Count.Should().Be(2);
+            expenses.Select(e => e.Id).Distinct().Count().Should().Be(2);
         }
 
         private async Task RecreateFileDb()

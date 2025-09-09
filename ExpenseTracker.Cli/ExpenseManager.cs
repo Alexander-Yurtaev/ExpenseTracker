@@ -43,6 +43,7 @@ public class ExpenseManager
         }
 
         var repository = new ExpenseRepository();
+        await repository.CreateIfNotExists();
         var expenses = await repository.LoadAsync();
 
         var id = (expenses.Count > 0 ? expenses.Max(e => e.Id) : 0) + 1;
@@ -59,6 +60,7 @@ public class ExpenseManager
     private async Task<ResultMessage> ListCommand(Dictionary<string, string> commandParameters)
     {
         var repository = new ExpenseRepository();
+        await repository.CreateIfNotExists();
         var list = await repository.GetAllExpensesAsync();
 
         PrintExpensesTable(list);
