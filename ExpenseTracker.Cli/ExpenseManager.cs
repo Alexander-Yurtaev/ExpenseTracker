@@ -48,12 +48,15 @@ public class ExpenseManager
         }
 
         var repository = new ExpenseRepository();
-        var id = await repository.GetNextIdAsync();
+        var expenses = await repository.LoadAsync();
+
+        var id = (expenses.Count > 0 ? expenses.Max(e => e.Id) : 0) + 1;
         var expense = new Expense(id, description, amount)
         {
             Date = DateTime.Now
         };
-        await repository.SaveAsync([expense]);
+        expenses.Add(expense);
+        await repository.SaveAsync(expenses);
 
         return new ResultMessage(true, expense.Id.ToString());
     }

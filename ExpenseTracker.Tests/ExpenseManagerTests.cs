@@ -52,6 +52,35 @@ namespace ExpenseTracker.Tests
             id.Should().Be(1);
         }
 
+        [Fact]
+        public async Task AddMultipleCommandsTest()
+        {
+            // Arrange
+            await RecreateFileDb();
+            var manager = new ExpenseManager();
+            var argsSet = new string[2][];
+
+            argsSet[0] = ["add", "--description", "Milk", "--amount", "28"];
+            argsSet[1] = ["add", "--description", "Sugar", "--amount", "30"];
+
+            var resultSet = new ResultMessage[2];
+
+            // Act
+            var index = 0;
+            foreach (string[] args in argsSet)
+            {
+                resultSet[index] = await manager.Execute(args);
+                index++;
+            }
+
+            // Assert
+            var expensesJson = await File.ReadAllTextAsync(ExpenseRepository.FilePath);
+            var expenses = JsonSerializer.Deserialize<List<Expense>>(expensesJson);
+
+            expenses.Should().NotBeNullOrEmpty();
+            expenses.Count.Should().Be(2);
+        }
+
         private async Task RecreateFileDb()
         {
             var emptyList = new List<Expense>();
