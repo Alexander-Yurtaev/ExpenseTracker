@@ -11,26 +11,21 @@ public class ExpenseManager
             return new ResultMessage(false, "Wrong value(s) in the args.");
         }
 
-        switch (command)
+        return command switch
         {
-            case "add":
-                return await AddCommand(parameters);
-            case "delete":
-                return await DeleteCommand(parameters);
-            case "list":
-                return await ListCommand(parameters);
-            case "summary":
-                return await SummaryCommand(parameters);
-            default:
-                return new ResultMessage(false, $"Unknown command - *{command}");
-        }
+            "add" => await AddCommand(parameters),
+            "delete" => await DeleteCommand(parameters),
+            "list" => await ListCommand(parameters),
+            "summary" => await SummaryCommand(parameters),
+            _ => new ResultMessage(false, $"Unknown command - *{command}")
+        };
     }
 
     /// <summary>
     /// $ expense-tracker add --description "Lunch" --amount 20
     /// </summary>
     /// <param name="commandParameters"></param>
-    private static async Task<ResultMessage> AddCommand(Dictionary<string, string> commandParameters)
+    private async Task<ResultMessage> AddCommand(Dictionary<string, string> commandParameters)
     {
         if (!commandParameters.TryGetValue("--description", out var description))
         {
@@ -61,25 +56,31 @@ public class ExpenseManager
         return new ResultMessage(true, expense.Id.ToString());
     }
 
-    private static async Task<ResultMessage> DeleteCommand(Dictionary<string, string> commandParameters)
+    private async Task<ResultMessage> ListCommand(Dictionary<string, string> commandParameters)
     {
-        return new ResultMessage(true, "Delete");
+        var repository = new ExpenseRepository();
+        var list = await repository.GetAllExpensesAsync();
+
+        PrintExpensesTable(list);
+
+        return await Task.FromResult(new ResultMessage(true, "List"));
     }
 
-    private static async Task<ResultMessage> ListCommand(Dictionary<string, string> commandParameters)
+    private async Task<ResultMessage> DeleteCommand(Dictionary<string, string> commandParameters)
     {
-        return new ResultMessage(true, "List");
-    }
-    private static async Task<ResultMessage> SummaryCommand(Dictionary<string, string> commandParameters)
-    {
-        return new ResultMessage(true, "Summary");
+        return await Task.FromResult(new ResultMessage(true, "Delete"));
     }
 
-    public static bool GetCommandAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
+    private async Task<ResultMessage> SummaryCommand(Dictionary<string, string> commandParameters)
+    {
+        return await Task.FromResult(new ResultMessage(true, "Summary"));
+    }
+
+    public bool GetCommandAndParameters(string[] args, out string command, out Dictionary<string, string> commandParameters)
     {
         commandParameters = new Dictionary<string, string>();
 
-        if (args.Length <= 1 || int.IsOddInteger(args.Length - 1))
+        if (args.Length == 0 || (args.Length != 1 && int.IsOddInteger(args.Length - 1)))
         {
             Console.WriteLine("You need to enter a command and, if it is necessary, parameter(s): its name and value.");
             Console.WriteLine("");
@@ -101,12 +102,22 @@ public class ExpenseManager
         return true;
     }
 
-    private static void PrintCommands()
+    private void PrintCommands()
     {
         Console.WriteLine("expense-tracker add --description <description> --amount <amount>");
         Console.WriteLine("expense-tracker list");
         Console.WriteLine("expense-tracker summary");
         Console.WriteLine("expense-tracker delete --id <id>");
         Console.WriteLine("expense-tracker summary --month <month>");
+    }
+
+    private void PrintExpensesTable(List<Expense> list)
+    {
+        Console.WriteLine($"| {"ID", 2}  | {"Date", 10} | {"Description", 50} | {"Amount", 5} |");
+
+        foreach (Expense expense in list)
+        {
+            Console.WriteLine($"| {expense.Id, 2}  | {expense.Date, 10:yyyy-mm-dd} | {expense.Description, 50} | {expense.Amount, 6} |");
+        }
     }
 }
