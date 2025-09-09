@@ -44,7 +44,10 @@ public class ExpenseManager
 
         var repository = new ExpenseRepository();
         var id = await repository.GetNextIdAsync();
-        var expense = new Expense(id, description, amount);
+        var expense = new Expense(id, description, amount)
+        {
+            Date = DateTime.Now
+        };
         await repository.SaveAsync([expense]);
 
         return new ResultMessage(true, expense.Id.ToString());
